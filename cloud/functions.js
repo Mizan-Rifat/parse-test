@@ -1,6 +1,16 @@
-Parse.Cloud.define('hello', req => {
-  req.log.info(req);
-  return 'Hi';
+const Pusher = require('pusher');
+const pusher = new Pusher({
+  appId: '1210587',
+  key: '621503252a4608413ccc',
+  secret: '6686587d8f5faa2744ce',
+  cluster: 'ap2',
+  useTLS: true,
+});
+
+Parse.Cloud.define('message', req => {
+  // console.log(req.params.value);
+  pusher.trigger('private-message', 'my-event', { message: req.params.value });
+  return req.params.value;
 });
 
 Parse.Cloud.define('asyncFunction', async req => {
@@ -9,6 +19,32 @@ Parse.Cloud.define('asyncFunction', async req => {
   return 'Hi async';
 });
 
-Parse.Cloud.beforeSave('Test', () => {
-  throw new Parse.Error(9001, 'Saving test objects is not available.');
+Parse.Cloud.beforeSave('Messages', (req) => {
+  req.object.set('deletedFromSender',false);
+  req.object.set('deletedFromReceiver',false);
+  req.object.set('seen',false);
+},{
+  fields:{
+    messageTo:{
+      required:true,
+    },
+    messageFrom:{
+      required:true,
+    },
+    message:{
+      required:true,
+    },
+    channel:{
+      required:true,
+    },
+  }
+});
+
+Parse.Cloud.afterSave('Messages', function(request) {
+  // if (request.object.existed()) {
+  //   return;
+  // }
+
+  const channel = request.object.get("channel");
+  pusher.trigger(channel, 'incomingMessage', request.object);
 });

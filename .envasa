@@ -1,0 +1,4 @@
+databaseUri=mongodb+srv://MizanRifat:mizan456@testcluster.7ekud.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+APP_ID
+MASTER_KEY
+SERVER_URL
